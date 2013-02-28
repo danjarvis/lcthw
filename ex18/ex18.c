@@ -17,6 +17,7 @@ void die(const char *message)
 // a typedef creates a fake type, in this
 // case for a function pointer
 typedef int (*compare_cb)(int a, int b);
+typedef int *(*sort_cb)(int *numbers, int count, compare_cb cmp);
 
 /**
  * A classic bubble sort function that uses the
@@ -47,6 +48,50 @@ int *bubble_sort(int *numbers, int count, compare_cb cmp)
 	return target;
 }
 
+/**
+ * Shell Sort
+ * http://en.wikipedia.org/wiki/Shell_sort
+ */
+int *shell_sort(int *numbers, int count, compare_cb cmp)
+{
+	int * gaps = NULL;
+	int gap = 1;
+	int temp = 0;
+	int i = 2;
+	int j;
+	int *target = malloc(count * sizeof(int));
+
+	if (!target)
+		die("Memory error");
+
+	memcpy(target, numbers, count * sizeof(int));
+
+	// Generate gaps (e.g. [701, 301, 132, 57, 10, 4, 1]
+	// Courtesy of Noah Massey
+	gaps = malloc(2 * sizeof(int));
+	gaps[0] = 1;
+	do {
+		if (i == gap) {
+			i *=2;
+			gaps = realloc(gaps, i * sizeof(int));
+		}
+		gaps[gap] = (gaps[gap-1] * 7) / 4 + 1;
+	} while (gaps[gap++] < count);
+
+	while (gap--) {
+		for (i = gaps[gap]; i < count; i++) {
+			temp = target[i];
+			for (j = i; j >= gaps[gap] && (cmp(target[j - gaps[gap]], temp) > 0); j -= gaps[gap]) {
+				target[j] = target[j - gaps[gap]];
+			}
+			target[j] = temp;
+		}
+	}
+
+	free(gaps);
+	return target;
+}
+
 int sorted_order(int a, int b)
 {
 	return a - b;
@@ -69,14 +114,15 @@ int strange_order(int a, int b)
  * Used to test that we are sorting things correctly
  * by doing the sort and printing it out
  */
-void test_sorting(int *numbers, int count, compare_cb cmp)
+void test_sorting(int *numbers, int count, char *description, sort_cb sort, compare_cb cmp)
 {
 	int i = 0;
-	int *sorted = bubble_sort(numbers, count, cmp);
+	int *sorted = sort(numbers, count, cmp);
 
 	if (!sorted)
 		die("Failed to sort as requested.");
 
+	printf("%s :: ", description);
 	for (i = 0; i < count; i++) {
 		printf("%d ", sorted[i]);
 	}
@@ -102,9 +148,12 @@ int main(int argc, char *argv[])
 		numbers[i] = atoi(inputs[i]);
 	}
 
-	test_sorting(numbers, count, sorted_order);
-	test_sorting(numbers, count, reverse_order);
-	test_sorting(numbers, count, strange_order);
+	test_sorting(numbers, count, "Bubble Sort :: Normal ", bubble_sort, sorted_order);
+	test_sorting(numbers, count, "Bubble Sort :: Reverse", bubble_sort, reverse_order);
+	test_sorting(numbers, count, "Bubble Sort :: Strange", bubble_sort, strange_order);
+	test_sorting(numbers, count, "Shell Sort  :: Normal ", shell_sort, sorted_order);
+	test_sorting(numbers, count, "Shell Sort  :: Reverse", shell_sort, reverse_order);
+	test_sorting(numbers, count, "Shell Sort  :: Strange", shell_sort, strange_order);
 
 	free(numbers);
 
