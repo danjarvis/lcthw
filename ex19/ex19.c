@@ -3,10 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "assert.h"
 #include "ex19.h"
 
 int Monster_attack(void *self, int damage)
 {
+	assert(self != NULL);
+
 	Monster *monster = self;
 	
 	printf("You attack %s!\n", monster->_(description));
@@ -24,6 +27,8 @@ int Monster_attack(void *self, int damage)
 
 int Monster_init(void *self)
 {
+	assert(self != NULL);
+
 	Monster *monster = self;
 	monster->hit_points = 10;
 	return 1;
@@ -36,6 +41,8 @@ Object MonsterProto = {
 
 void *Room_move(void *self, Direction direction)
 {
+	assert(self != NULL);
+
 	Room *room = self;
 	Room *next = NULL;
 
@@ -64,6 +71,8 @@ void *Room_move(void *self, Direction direction)
 
 int Room_attack(void *self, int damage)
 {
+	assert(self != NULL);
+
 	Room *room = self;
 	Monster *monster = room->bad_guy;
 	if (monster) {
@@ -82,6 +91,8 @@ Object RoomProto = {
 
 void *Map_move(void *self, Direction direction)
 {
+	assert(self != NULL);
+
 	Map *map = self;
 	Room *location = map->location;
 	Room *next = NULL;
@@ -96,7 +107,9 @@ void *Map_move(void *self, Direction direction)
 
 int Map_attack(void *self, int damage)
 {
+	assert(self != NULL);
 	Map *map = self;
+	assert(map->location != NULL);
 	Room *location = map->location;
 
 	return location->_(attack)(location, damage);
@@ -104,16 +117,23 @@ int Map_attack(void *self, int damage)
 
 int Map_init(void *self)
 {
+	assert(self != NULL);
+
 	Map * map = self;
 
 	// make some rooms for a small map
 	Room *hall = NEW(Room, "The great Hall");
+	assert(hall != NULL);
 	Room *throne = NEW(Room, "The throne room");
+	assert(throne != NULL);
 	Room *arena = NEW(Room, "The arena, with the minotaur");
+	assert(arena != NULL);
 	Room *kitchen = NEW(Room, "Kitchen, you have the knife now");
+	assert(kitchen != NULL);
 
 	// put the bad guy in the arena
 	arena->bad_guy = NEW(Monster, "The evil minotaur");
+	assert(arena->bad_guy != NULL);
 
 	// setup the map rooms
 	hall->north = throne;
@@ -140,6 +160,8 @@ Object MapProto = {
 
 int process_input(Map *game)
 {
+	assert(game != NULL);
+
 	printf("\n> ");
 	char ch = getchar();
 	getchar(); // eat ENTER
@@ -193,6 +215,7 @@ int main(int argc, char *argv[])
 
 	// make our map to work with
 	Map *game = NEW(Map, "The Hall of the Minotaur.");
+	assert(game != NULL);
 
 	printf("You enter the ");
 	game->location->_(describe)(game->location);
